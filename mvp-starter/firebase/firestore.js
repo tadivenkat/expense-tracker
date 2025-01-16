@@ -29,7 +29,7 @@ export const addReceipt = async (receipt) => {
 
 export const getReceipts = async (uid) => {
   return new Promise(async (resolve, reject) => {
-    const receiptsQuery = query(collection(db, RECEIPT_COLLECTION), orderBy("date", "desc"));
+    const receiptsQuery = query(collection(db, RECEIPT_COLLECTION), where("uid", "==", uid), orderBy("date", "desc"));
     const receiptsSnapshot = await getDocs(receiptsQuery);
     const receipts = [];
     receiptsSnapshot.docs.forEach(async (doc, index) => { 
