@@ -47,7 +47,7 @@ export default function ReceiptRow(props) {
                     <Stack direction="row" className={styles.contentRow}>
                         <Stack direction="column" sx={{ flexGrow: 1 }}>
                             <Typography variant="h3">
-                                {format(receipt.date, 'MM/dd/yy')}
+                                {new Date(receipt.date.seconds * 1000).toLocaleDateString('en-US')}
                             </Typography> 
                             <Typography variant="h4">
                                 ${receipt.amount}
@@ -60,6 +60,11 @@ export default function ReceiptRow(props) {
                             <Typography variant="h5">
                                 {receipt.items}
                             </Typography>                
+                        </Stack>
+                        <Stack direction="column" sx={{ flexGrow: 1 }}>
+                            <Typography variant="h5">
+                                <img alt="receipt image" src={receipt.imageUrl} width="100" height="100"/>
+                            </Typography>
                         </Stack>
                     </Stack>
                 </Stack>

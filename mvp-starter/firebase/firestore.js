@@ -18,3 +18,26 @@
 import { addDoc, collection, deleteDoc, doc, getDocs, onSnapshot, orderBy, query, setDoc, where } from 'firebase/firestore'; 
 import { db } from './firebase';
 import { getDownloadURL } from './storage';
+
+// Name of receipt collection in Firestore
+const RECEIPT_COLLECTION = 'receipts';
+
+export const addReceipt = async (receipt) => {
+  const receiptRef = await addDoc(collection(db, RECEIPT_COLLECTION), receipt);
+  return receiptRef.id;
+};
+
+export const getReceipts = async (uid) => {
+  return new Promise(async (resolve, reject) => {
+    const receiptsQuery = query(collection(db, RECEIPT_COLLECTION), orderBy("date", "desc"));
+    const receiptsSnapshot = await getDocs(receiptsQuery);
+    const receipts = [];
+    receiptsSnapshot.docs.forEach(async (doc, index) => { 
+      const imageUrl = await getDownloadURL(doc.data().imageUrl);
+      receipts.push({...doc.data(), id: doc.id, imageUrl});
+      if (index === receiptsSnapshot.docs.length - 1) {
+        resolve(receipts);
+      } 
+    });
+  });
+};

@@ -50,9 +50,11 @@ const DEFAULT_FORM_STATE = {
   - onCloseDialog emits to close dialog
  */
 export default function ExpenseDialog(props) {
+  const { authUser } = useAuth();
   const isEdit = Object.keys(props.edit).length > 0;
   const [formFields, setFormFields] = useState(isEdit ? props.edit : DEFAULT_FORM_STATE);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAdd, setIsAdd] = useState(true);
 
   // If the receipt to edit or whether to close or open the dialog ever changes, reset the form fields
   useEffect(() => {
@@ -80,6 +82,40 @@ export default function ExpenseDialog(props) {
   const closeDialog = () => {
     setIsSubmitting(false);
     props.onCloseDialog();
+  }
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+
+    try {
+      if (isAdd) {
+        // Adding receipt
+        // Store image into Storage
+        const imageUrl = await uploadImage(formFields.file, authUser.uid);
+        // Store receipt into Firestore
+        const receipt = { 
+          uid: authUser.uid, 
+          date: formFields.date, 
+          locationName: formFields.locationName, 
+          address: formFields.address, 
+          items: formFields.items, 
+          amount: formFields.amount, 
+          imageUrl: imageUrl,
+        };
+        await addReceipt(receipt);
+      } else {
+        // Editing receipt
+        // Replace image in Storage
+        //await replaceImage(authUser.uid, formFields.fileName, formFields.file);
+        // Update receipt in Firestore
+        //await updateReceipt(authUser.uid, formFields.date, formFields.locationName, formFields.address, formFields.items, formFields.amount);
+      }
+      props.onSuccess(RECEIPTS_ENUM.add);
+    } catch (error) {
+      props.onError(RECEIPTS_ENUM.add);
+      console.log(error);
+    }
+    closeDialog();
   }
 
   return (
@@ -122,7 +158,7 @@ export default function ExpenseDialog(props) {
           <Button color="secondary" variant="contained" disabled={true}>
             Submitting...
           </Button> :
-          <Button color="secondary" variant="contained" disabled={isDisabled()}>
+          <Button color="secondary" variant="contained" disabled={isDisabled()} onClick={handleSubmit}>
             Submit
           </Button>}
       </DialogActions>

@@ -16,5 +16,19 @@
  */
 
 import { format } from 'date-fns';
-import { deleteObject, getDownloadURL as getStorageDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import { deleteObject, getDownloadURL as getStorageDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { storage } from './firebase';
+
+const BUCKET_URL = "gs://expenses-tracker-dev-2648c.firebasestorage.app";
+
+export async function uploadImage(image, uid) {
+  const formattedDate = format(new Date(), "yyyy-MM-dd'T'HH:mm:ss'Z'"); // ISO 8601
+  const path = `${BUCKET_URL}/${uid}/${formattedDate}.jpg`;
+  const reference = ref(storage, path);
+  await uploadBytes(reference, image);
+  return path;
+}
+
+export async function getDownloadURL(path) {
+  return await getStorageDownloadURL(ref(storage, path));
+}
