@@ -88,10 +88,8 @@ export default function Dashboard() {
 
   useEffect(async () => {
     if (authUser) {
-      getReceipts(authUser.uid).then((receipts) => {
-        setReceipts(receipts);
-        setIsLoadingReceipts(false);
-      });      
+      const unsubscribe = getReceipts(authUser.uid, setReceipts, setIsLoadingReceipts);
+      return () => unsubscribe;
     }
   }, [authUser]);
 
@@ -111,6 +109,18 @@ export default function Dashboard() {
     setAction(RECEIPTS_ENUM.delete);
     setDeleteReceiptId(id);
     setDeleteReceiptImageBucket(imageBucket);
+  }
+
+  const onDelete = async () => {
+    let isSuccess = true;
+    try {
+      await deleteReceipt(deleteReceiptId);
+      await deleteImage(deleteReceiptImageBucket);
+    } catch (error) {
+      isSuccess = false;
+    }
+    resetDelete();
+    onResult(RECEIPTS_ENUM.delete, isSuccess);
   }
 
   const resetDelete = () => {
@@ -164,7 +174,7 @@ export default function Dashboard() {
           <Button color="secondary" variant="outlined" onClick={resetDelete}>
               Cancel
           </Button>
-          <Button color="secondary" variant="contained" autoFocus>
+          <Button color="secondary" variant="contained" autoFocus onClick={() => onDelete(deleteReceiptId, deleteReceiptImageBucket)}>
               Delete
           </Button>
         </DialogActions>

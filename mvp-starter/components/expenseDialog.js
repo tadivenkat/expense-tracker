@@ -54,7 +54,6 @@ export default function ExpenseDialog(props) {
   const isEdit = Object.keys(props.edit).length > 0;
   const [formFields, setFormFields] = useState(isEdit ? props.edit : DEFAULT_FORM_STATE);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isAdd, setIsAdd] = useState(true);
 
   // If the receipt to edit or whether to close or open the dialog ever changes, reset the form fields
   useEffect(() => {
@@ -88,7 +87,29 @@ export default function ExpenseDialog(props) {
     setIsSubmitting(true);
 
     try {
-      if (isAdd) {
+      if (isEdit) {
+        //Editing receipt
+        //Replace image in Storage
+        let imageUrl = formFields.imageUrl;
+        if (formFields.imageBucket && formFields.fileName) {
+          imageUrl = await replaceImage(formFields.file, formFields.imageBucket);
+        } else if (formFields.fileName) {
+          imageUrl = await uploadImage(formFields.file, authUser.uid);
+        }
+        //Update receipt in Firestore
+        const receipt = { 
+          uid: authUser.uid, 
+          date: formFields.date, 
+          locationName: formFields.locationName, 
+          address: formFields.address, 
+          items: formFields.items, 
+          amount: formFields.amount, 
+          imageUrl: imageUrl,
+        };
+        console.log("Receipt Id: ", formFields.id);
+        console.log("receipt: ", receipt);
+        await updateReceipt(formFields.id, receipt);
+      } else {
         // Adding receipt
         // Store image into Storage
         const imageUrl = await uploadImage(formFields.file, authUser.uid);
@@ -103,14 +124,8 @@ export default function ExpenseDialog(props) {
           imageUrl: imageUrl,
         };
         await addReceipt(receipt);
-      } else {
-        // Editing receipt
-        // Replace image in Storage
-        //await replaceImage(authUser.uid, formFields.fileName, formFields.file);
-        // Update receipt in Firestore
-        //await updateReceipt(authUser.uid, formFields.date, formFields.locationName, formFields.address, formFields.items, formFields.amount);
+        props.onSuccess(RECEIPTS_ENUM.add);
       }
-      props.onSuccess(RECEIPTS_ENUM.add);
     } catch (error) {
       props.onError(RECEIPTS_ENUM.add);
       console.log(error);
@@ -137,15 +152,15 @@ export default function ExpenseDialog(props) {
         </Stack>
         <Stack>
           <LocalizationProvider dateAdapter={AdapterDateFns}>
-          <DatePicker
-              label="Date"
-              value={formFields.date}
-              onChange={(newDate) => {
-                setFormFields(prevState => ({...prevState, date: newDate}));
-              }}
-              maxDate={new Date()}
-              renderInput={(params) => <TextField color="tertiary" {...params} />}
-            />
+            <DatePicker
+                label="Date"
+                value={formFields.date && formFields.date.seconds ? new Date(formFields.date.seconds * 1000) : null}
+                onChange={(newDate) => {
+                  setFormFields(prevState => ({...prevState, date: newDate}));
+                }}
+                maxDate={new Date()}
+                renderInput={(params) => <TextField color="tertiary" {...params} />}
+              />
           </LocalizationProvider>
         </Stack>
         <TextField color="tertiary" label="Location name" variant="standard" value={formFields.locationName} onChange={(event) => updateFormField(event, 'locationName')} />

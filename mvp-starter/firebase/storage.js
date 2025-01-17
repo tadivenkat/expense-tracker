@@ -29,6 +29,17 @@ export async function uploadImage(image, uid) {
   return path;
 }
 
+export async function deleteImage(path) {
+  await deleteObject(ref(storage, path));
+}
+
+export async function replaceImage(image, path) {
+  console.log("Replacing image: ", path);
+  const reference = ref(storage, path);
+  await uploadBytes(reference, image);
+  return path;
+}
+
 export async function getDownloadURL(path) {
   return await getStorageDownloadURL(ref(storage, path));
 }

@@ -47,7 +47,7 @@ export default function ReceiptRow(props) {
                     <Stack direction="row" className={styles.contentRow}>
                         <Stack direction="column" sx={{ flexGrow: 1 }}>
                             <Typography variant="h3">
-                                {new Date(receipt.date.seconds * 1000).toLocaleDateString('en-US')}
+                                {receipt.date && new Date(receipt.date.seconds * 1000).toLocaleDateString('en-US')}
                             </Typography> 
                             <Typography variant="h4">
                                 ${receipt.amount}

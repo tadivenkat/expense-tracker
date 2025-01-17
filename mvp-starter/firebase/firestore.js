@@ -27,17 +27,27 @@ export const addReceipt = async (receipt) => {
   return receiptRef.id;
 };
 
-export const getReceipts = async (uid) => {
-  return new Promise(async (resolve, reject) => {
-    const receiptsQuery = query(collection(db, RECEIPT_COLLECTION), where("uid", "==", uid), orderBy("date", "desc"));
-    const receiptsSnapshot = await getDocs(receiptsQuery);
+export const deleteReceipt = async (receiptId) => {
+  await deleteDoc(doc(db, RECEIPT_COLLECTION, receiptId));
+};
+
+export const updateReceipt = async (receiptId, receipt) => {
+  await setDoc(doc(db, RECEIPT_COLLECTION, receiptId), receipt);
+};
+
+export const getReceipts = async (authUserUid, setReceipts, setIsLoadingReceipts) => {
+  const receiptsQuery = query(collection(db, RECEIPT_COLLECTION), where("uid", "==", authUserUid), orderBy("date", "desc"));
+
+  const unsubscribe = onSnapshot(receiptsQuery, async (snapshot) => {
     const receipts = [];
-    receiptsSnapshot.docs.forEach(async (doc, index) => { 
+    snapshot.docs.forEach(async (doc, index) => { 
       const imageUrl = await getDownloadURL(doc.data().imageUrl);
       receipts.push({...doc.data(), id: doc.id, imageUrl});
-      if (index === receiptsSnapshot.docs.length - 1) {
-        resolve(receipts);
+      if (index === snapshot.docs.length - 1) {
+        setReceipts(receipts);
+        setIsLoadingReceipts(false);
       } 
     });
   });
+  return unsubscribe;
 };
